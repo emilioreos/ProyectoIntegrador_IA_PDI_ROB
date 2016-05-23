@@ -1,23 +1,23 @@
 package camara;
-
+/*
 import java.awt.HeadlessException;
 import java.awt.image.BufferedImage;
 import javax.swing.*;
 
 import au.edu.jcu.v4l4j.exceptions.V4L4JException;
-
+*/
 public class Arranque {
 	
 	public static void main(String[] args){
-		Controlador n=new Controlador();
+		/*Controlador n=new Controlador();
 		try {
 			n.girar(1, 90);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
-		/*
 		Cerebro c=new Cerebro();
 		try{
 			c.buscar();
@@ -25,7 +25,7 @@ public class Arranque {
 		}catch(Exception e){
 			System.out.println("Se ha presentado una excepcion al buscar");
 			e.printStackTrace();
-		}*/
+		}
 		/*
 		JLabel jl=new JLabel();
 		Camara c=new Camara(0);

@@ -2,7 +2,6 @@ package camara;
 
 import java.util.ArrayList;
 
-import au.edu.jcu.v4l4j.exceptions.V4L4JException;
 
 
 
@@ -21,7 +20,7 @@ public class Cerebro {
 		camara.nuevaCptura();
 		for(;;){
 			Imagen imagen=new Imagen(camara.getCaptura());
-			if(imagen.getCentroide(Imagen.BUSCAR_META)[0]>130&&imagen.getCentroide(Imagen.BUSCAR_META)[0]<190){
+			if(imagen.getCentroide(Imagen.BUSCAR_META)[0]>130&&imagen.getCentroide(Imagen.BUSCAR_META)[0]<190&&imagen.getCentroide(Imagen.BUSCAR_META)[2]>100){
 				camara.nuevaCptura();
 				break;
 			}else if(imagen.getCentroide(Imagen.BUSCAR_META)[0]<160&&imagen.getCentroide(Imagen.BUSCAR_META)[0]!=Double.NaN){
@@ -49,25 +48,60 @@ public class Cerebro {
 	private ArrayList<Contenedor> obtenerVesinos() throws Exception{
 		Imagen imagen;
 		ArrayList<Contenedor> lista = new ArrayList<Contenedor>();
-		for(int i=0;i<360;){
+		for(int i=0;i<360;i+=30){
 			imagen=new Imagen(camara.getCaptura());
-			if(imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]!=Double.NaN&&imagen.getCentroide(Imagen.BUSCAR_META)[0]>130&&imagen.getCentroide(Imagen.BUSCAR_META)[0]<190){
-				Contenedor c=new Contenedor();
-				c.datos=imagen.getCentroide(Imagen.BUSCAR_PUERTA);
-				c.angulo=i;
-				lista.add(c);
-				
-			}else{
-				
+			if(imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]!=Double.NaN){
+				if(imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]>130&&imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]<190){
+					Contenedor c=new Contenedor();
+					c.datos=imagen.getCentroide(Imagen.BUSCAR_PUERTA);
+					c.angulo=i;
+					lista.add(c);
+					
+				}else if(imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]>160){
+					//boolean centro=false;
+					for(int j=0;i<100;i+=10){
+						//derecha mayor
+						controlador.girar(Controlador.DERECHA, 10);
+						camara.nuevaCptura();
+						imagen=new Imagen(camara.getCaptura());
+						if(imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]>110&&imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]<210){
+							Contenedor c=new Contenedor();
+							c.datos=imagen.getCentroide(Imagen.BUSCAR_PUERTA);
+							c.angulo=i+j;
+							lista.add(c);
+							i+=j;
+							break;
+						}
+					}
+				}else{
+					for(int j=0;i<100;i+=10){
+						//derecha mayor
+						controlador.girar(Controlador.IZQUIERDA, 10);
+						camara.nuevaCptura();
+						imagen=new Imagen(camara.getCaptura());
+						if(imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]>110&&imagen.getCentroide(Imagen.BUSCAR_PUERTA)[0]<210){
+							Contenedor c=new Contenedor();
+							c.datos=imagen.getCentroide(Imagen.BUSCAR_PUERTA);
+							c.angulo=i-j;
+							lista.add(c);
+							i-=j;
+							break;
+						}
+					}
+				}
 			}
-			controlador.girar(Controlador.DERECHA, 10);
+			
+			controlador.girar(Controlador.DERECHA, 30);
 			camara.nuevaCptura();
 		}
+
+		buscarMeta();
+		camara.nuevaCptura();
 		return lista;
 	}
 	private Contenedor mejorAngulo(ArrayList<Contenedor> lista){
 		Contenedor mejor=new Contenedor();
-		mejor.angulo=370;
+		mejor.angulo=470;
 		mejor.datos=null;
 		for(int i=0;i<lista.size();i++){
 			Contenedor c=lista.get(i);
@@ -75,7 +109,7 @@ public class Cerebro {
 				mejor.angulo=c.angulo;
 				mejor.datos=c.datos;
 			}else if(c.angulo>=180){
-				if((-(360-c.angulo))<mejor.angulo){
+				if(((360-c.angulo))<mejor.angulo){
 					mejor.angulo=c.angulo;
 					mejor.datos=c.datos;
 				}
@@ -107,7 +141,7 @@ public class Cerebro {
 			sentido=true;
 			System.out.println("Meta");
 		}else{
-			margen=100;
+			margen=130;
 			sentido=false;
 			System.out.println("Puerta");
 		}
@@ -142,27 +176,47 @@ public class Cerebro {
 		buscarMeta();
 		Imagen imagen=new Imagen(camara.getCaptura());
 		if(imagen.getCentroide(Imagen.BUSCAR_META)[1]>100){
-			//controlador.adelante((int)(320*240/imagen.getCentroide(Imagen.BUSCAR_META)[2]));
 			irALugar(Imagen.BUSCAR_META);
 		}else{
 			camara.nuevaCptura();
 			while(true){
 				ArrayList<Contenedor> lista=obtenerVesinos();
 				Contenedor angulo=mejorAngulo(lista);
-				if(angulo.angulo==370){
+				if(angulo.angulo==470){
+					System.out.println("Estoy encerrado");
 					return;
 				}else if(angulo.angulo<180){
-					controlador.girar(Controlador.DERECHA, angulo.angulo);
+					if(angulo.angulo>0){
+						controlador.girar(Controlador.DERECHA, angulo.angulo);
+					}else{
+						controlador.girar(Controlador.IZQUIERDA, -angulo.angulo);
+					}
 				}else{
-					controlador.girar(Controlador.IZQUIERDA, -(360-angulo.angulo));
+					if((360-angulo.angulo)>0){
+						controlador.girar(Controlador.IZQUIERDA, (360-angulo.angulo));
+					}else{
+						controlador.girar(Controlador.DERECHA, -(360-angulo.angulo));
+					}
 				}
 				irALugar(Imagen.BUSCAR_PUERTA);
+				controlador.adelante(15);
+				
 				if(angulo.angulo<180){
-					controlador.girar(Controlador.DERECHA, angulo.angulo);
-					buscarMeta(Controlador.DERECHA);
+					if(angulo.angulo>0){
+						controlador.girar(Controlador.IZQUIERDA, angulo.angulo);
+						buscarMeta(Controlador.IZQUIERDA);
+					}else{
+						controlador.girar(Controlador.DERECHA, -angulo.angulo);
+						buscarMeta(Controlador.DERECHA);
+					}
 				}else{
-					controlador.girar(Controlador.IZQUIERDA, -(360-angulo.angulo));
-					buscarMeta(Controlador.IZQUIERDA);
+					if((360-angulo.angulo)>0){
+						controlador.girar(Controlador.DERECHA, (360-angulo.angulo));
+						buscarMeta(Controlador.DERECHA);
+					}else{
+						controlador.girar(Controlador.IZQUIERDA, -(360-angulo.angulo));
+						buscarMeta(Controlador.IZQUIERDA);
+					}
 				}
 				imagen=new Imagen(camara.getCaptura());
 				if(imagen.getCentroide(Imagen.BUSCAR_META)[1]>120){

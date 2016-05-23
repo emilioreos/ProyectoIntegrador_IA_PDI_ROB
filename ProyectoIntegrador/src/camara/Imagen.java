@@ -45,8 +45,8 @@ public class Imagen {
 		centroAmarillo[0]=xAmarillo*1.0/contadorAmarillo;
 		centroRojo[1]=yRojo*1.0/contadorRojo;
 		centroAmarillo[1]=yAmarillo*1.0/contadorAmarillo;
-		centroRojo[2]=(contadorRojo*1.0/(320*240))*100;
-		centroAmarillo[2]=(contadorAmarillo*1.0/(320*240))*100;
+		centroRojo[2]=contadorRojo;
+		centroAmarillo[2]=contadorAmarillo;
 	}
 	public BufferedImage getImagen(int tipo){
 		if(tipo==BUSCAR_META){
